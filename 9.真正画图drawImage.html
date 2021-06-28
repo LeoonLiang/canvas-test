@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    body {
+      text-align: center;
+      padding-top: 20px;
+    }
+    canvas {
+      box-shadow: 0 0 10px #333;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas" width="800" height="600"></canvas>
+</body>
+
+<script>
+  function draw() {
+    /** @type {HTMLCanvasElement} */ 
+    var canvas = document.getElementById('canvas')
+    if (canvas.getContext) {
+      const ctx = canvas.getContext('2d')
+      const img = new Image()
+      img.src = '126_8475947.jpg'
+      // 在onload后运行，切记
+      img.onload = function () {
+        // 图片，x，y，宽度，高度
+        ctx.drawImage(img, 0, 0, 600, 400)
+        // 图片，x，y
+        ctx.drawImage(img, 0, 0)
+        // 图片，sx剪切x位置，sy剪切y位置，被剪宽度，被剪高度, 图片位置x， 图片位置y， 图片宽度，图片高度
+        // ctx.drawImage(img, 0, 0, 200, 100, 0, 0, 600, 400)
+      }
+    }
+  }
+  draw()
+</script>
+</html>

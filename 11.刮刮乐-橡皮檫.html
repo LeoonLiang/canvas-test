@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    body {
+      text-align: center;
+      padding-top: 20px;
+    }
+    img {
+      position: absolute;
+    }
+    canvas {
+      position: absolute;
+    }
+  </style>
+</head>
+<body>
+  <img src="126_8475947.jpg" alt="">
+  <canvas id="canvas" width="800" height="600"></canvas>
+</body>
+
+<script>
+  function draw() {
+    /** @type {HTMLCanvasElement} */ 
+    var canvas = document.getElementById('canvas')
+    if (canvas.getContext) {
+      const ctx = canvas.getContext('2d')
+      const img = new Image()
+      img.src = '126_8475947.jpg'
+      img.onload = function() {
+        ctx.drawImage(img, 0, 0)
+        ctx.beginPath()
+        ctx.fillStyle = 'gray'
+        ctx.fillRect(0, 0, img.width, img.height)
+        ctx.globalCompositeOperation = 'destination-out'
+        ctx.lineWidth = 20
+        ctx.lineCap = 'round'
+        canvas.onmousedown = function(e) {
+          const event = e || window.event
+          // 鼠标相对位置
+          const x = event.clientX - canvas.offsetLeft
+          const y = event.clientY - canvas.offsetTop
+          ctx.moveTo(x, y)
+          canvas.onmousemove = function(e) {
+            const event = e || window.event
+            // 鼠标相对位置
+            const x = event.clientX - canvas.offsetLeft
+            const y = event.clientY - canvas.offsetTop
+            ctx.lineTo(x, y)
+            ctx.stroke()
+          }
+          canvas.onmouseup = function(e) {
+            canvas.onmousemove = null
+          }
+        }
+      }
+    }
+  }
+  draw()
+</script>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    body {
+      text-align: center;
+      padding-top: 20px;
+    }
+    canvas {
+      box-shadow: 0 0 10px #333;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas" width="800" height="600"></canvas>
+</body>
+
+<script>
+  function draw() {
+    /** @type {HTMLCanvasElement} */ 
+    var canvas = document.getElementById('canvas')
+    if (canvas.getContext) {
+      const ctx = canvas.getContext('2d')
+      /**
+       * canvas动画原理
+       * 1.绘制图形
+       * 2.清除图形
+       * 3.改变位置
+       * 4.重新绘制图形
+       * 5. 重复2、3、4
+      */
+      //  第一步
+      let x = 0, y =0, width = 50, height = 50
+      ctx.fillStyle = 'red'
+      ctx.fillRect(x, y, width, height)
+
+      // 走动速度
+      let speedX = 2, speedY = 2
+      function animate() {
+         // 第二步 清除画布
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+        // 第三步 改变位置
+        x += speedX
+        if (x > canvas.width - width || x < 0) {
+          speedX *= -1
+        }
+        y += speedY
+        if (y > canvas.height - height || y < 0) {
+          speedY *= -1
+        }
+
+        // 第四步 重新绘制图形
+        ctx.fillRect(x, y, width, height)
+        window.requestAnimationFrame(animate)
+      }
+      animate()
+    }
+  }
+  draw()
+</script>
+</html>

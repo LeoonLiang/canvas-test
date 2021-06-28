@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    body {
+      text-align: center;
+      padding-top: 20px;
+    }
+    canvas {
+      box-shadow: 0 0 10px #333;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+    <canvas id="canvas" width="800" height="600"></canvas>
+</body>
+<script>
+    function draw() {
+      /** @type {HTMLCanvasElement} */ 
+      var canvas = document.getElementById('canvas')
+      if (canvas.getContext) {
+        var ctx = canvas.getContext('2d')
+        /*
+        * 1.创建起始路径
+        * 2.使用画图命令画出路径
+        * 3.路径闭合
+        * 4.描边或者填充
+        */
+        //  三角形
+        ctx.beginPath();
+        ctx.moveTo(50, 50)
+        ctx.lineTo(150, 50)
+        ctx.lineTo(50, 150)
+        ctx.closePath()
+        ctx.stroke()
+        ctx.beginPath();
+        ctx.moveTo(175, 75)
+        ctx.lineTo(175, 175)
+        ctx.lineTo(75, 175)
+        ctx.closePath()
+        ctx.fill()
+      }
+    }
+    draw()
+</script>
+</html>

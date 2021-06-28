@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    body {
+      text-align: center;
+      padding-top: 20px;
+    }
+    canvas {
+      box-shadow: 0 0 10px #333;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas" width="800" height="600"></canvas>
+</body>
+
+<script>
+  function draw() {
+    /** @type {HTMLCanvasElement} */ 
+    var canvas = document.getElementById('canvas')
+    if (canvas.getContext) {
+      const ctx = canvas.getContext('2d')
+      /**
+       * 线性渐变
+       * 参数1：起点x1
+       * 参数2：起点y1
+       * 参数3：起点x2
+       * 参数4：起点y2
+      */
+      const lingrad = ctx.createLinearGradient(0, 0, 0, 150)
+      /**
+       * 参数1：0-1，颜色位置
+       * 参数2： 颜色
+      */
+     lingrad.addColorStop(0, '#cc6677')
+     lingrad.addColorStop(0.5, '#fff')
+     lingrad.addColorStop(0.5, '#c6c776')
+     const lingrad2 = ctx.createLinearGradient(0, 50, 0, 90)
+     lingrad2.addColorStop(0.5, '#000')
+     lingrad2.addColorStop(1, 'rgba(0, 0, 0, 0)')
+     ctx.fillStyle = lingrad
+     ctx.fillRect(10, 10, 130, 130)
+     ctx.strokeStyle = lingrad2
+     ctx.strokeRect(50, 50, 50, 50)
+    }
+  }
+  draw()
+</script>
+</html>

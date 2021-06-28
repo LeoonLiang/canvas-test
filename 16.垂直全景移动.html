@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    body {
+      text-align: center;
+      padding-top: 20px;
+    }
+    canvas {
+      box-shadow: 0 0 10px #333;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas" width="800" height="600"></canvas>
+</body>
+
+<script>
+  function draw() {
+    /** @type {HTMLCanvasElement} */ 
+    var canvas = document.getElementById('canvas')
+    if (canvas.getContext) {
+      const ctx = canvas.getContext('2d')
+      const backImg = new Image()
+      backImg.src = '173833wdp7llu4yb218t95.jpeg'
+      backImg.onload = () => {
+        backMove()
+      }
+      let y = 0
+      function backMove() {
+        // ctx.save()
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+        // ctx.translate(-x, 0)
+        ctx.drawImage(backImg, 0, -y, backImg.width * canvas.height / backImg.height, canvas.height)
+        ctx.drawImage(backImg, 0, canvas.height - y, backImg.width * canvas.height / backImg.height, canvas.height)
+        y++
+        if (y > canvas.height) {
+          y = 0
+        }
+        // ctx.restore()
+        window.requestAnimationFrame(backMove)
+      }
+    }
+  }
+  draw()
+</script>
+</html>

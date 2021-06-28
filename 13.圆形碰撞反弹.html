@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    body {
+      text-align: center;
+      padding-top: 20px;
+    }
+    canvas {
+      box-shadow: 0 0 10px #333;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas" width="800" height="600"></canvas>
+</body>
+
+<script>
+  function draw() {
+    /** @type {HTMLCanvasElement} */ 
+    var canvas = document.getElementById('canvas')
+    if (canvas.getContext) {
+      const ctx = canvas.getContext('2d')
+      function Ball(x, y, r, speedX, speedY, color) {
+        this.x = x
+        this.y = y
+        this.r = r
+        this.speedX = speedX
+        this.speedY = speedY
+        this.color = color
+
+        this.draw = function () {
+          // beginpath很重要，不写就是相当于代码堆积到最后一次fill，导致没有清除
+          ctx.beginPath()
+          ctx.fillStyle = color
+          console.log(this.x, this.y)
+          ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2)
+          ctx.fill()
+        }
+
+        this.move = () => {
+          const x = this.x + this.speedX
+          // 为什么-r，因为xy是圆心的位置
+          if (x > canvas.width - this.r || x <  this.r) {
+            this.speedX *= -1
+          }
+          this.x += this.speedX
+          const y = this.y + this.speedY
+          if (y > canvas.height - this.r || y < this.r) {
+            this.speedY *= -1
+          }
+          this.y += this.speedY
+        }
+      }
+      const ball = new Ball(50, 50, 50, 2, 2, 'orange')
+      // ball.draw()
+
+      function start () {
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+        ball.draw()
+        ball.move()
+        window.requestAnimationFrame(start)
+      }
+      start()
+    }
+  }
+  draw()
+</script>
+</html>
