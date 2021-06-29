@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    body {
+      text-align: center;
+      padding-top: 20px;
+    }
+    canvas {
+      box-shadow: 0 0 10px #333;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas" width="800" height="600"></canvas>
+</body>
+
+<script>
+  function draw() {
+    /** @type {HTMLCanvasElement} */ 
+    var canvas = document.getElementById('canvas')
+    if (canvas.getContext) {
+      const ctx = canvas.getContext('2d')
+      // 第一，造矩形
+      // 矩形类
+      function Rect(x, y, width, height, color) {
+        this.x = x
+        this.y = y
+        this.width = width
+        this.height = height
+        this.color = color
+      }
+      // 画矩形
+      Rect.prototype.rectDraw = function () {
+        ctx.beginPath()
+        ctx.fillStyle =  this.color
+        ctx.fillRect(this.x, this.y, this.width, this.height)
+        ctx.strokeRect(this.x, this.y, this.width, this.height)
+      }
+      
+      // 第二，造🐍
+      // 🐍类
+      function Snake(size) {
+        this.size = size
+        this.direction = 'right'
+        this.head = new Rect((canvas.width- size) / 2, (canvas.height- size) / 2, this.size, this.size, 'red')
+        this.body = new Array()
+        var x = this.head.x - this.size
+        this.body.push(new Rect(x, this.head.y, this.size, this.size, 'gray'))
+        this.body.push(new Rect(x - this.size, this.head.y, this.size, this.size, 'gray'))
+        this.body.push(new Rect(x - this.size * 2, this.head.y, this.size, this.size, 'gray'))
+        this.body.push(new Rect(x - this.size * 3, this.head.y, this.size, this.size, 'gray'))
+        this.body.push(new Rect(x - this.size * 4, this.head.y, this.size, this.size, 'gray'))
+        document.onkeydown = (e) => {
+          switch(e.keyCode) {
+            case 37:
+              if (this.direction !== 'right') {
+                this.direction = 'left'
+              }
+              break
+            case 38:
+              if (this.direction !== 'bottom') {
+                this.direction = 'top'
+              }
+              break
+            case 39:
+              if (this.direction !== 'left') {
+                this.direction = 'right'
+              }
+              break
+            case 40:
+              if (this.direction !== 'top') {
+                this.direction = 'bottom'
+              }
+          }
+        }
+      }
+      // 画🐍
+      Snake.prototype.snakeDraw = function() {
+        this.head.rectDraw()
+        this.body.forEach(item => {
+          item.rectDraw()
+        })
+      }
+      // 🐍动
+      Snake.prototype.snakeMove = function() {
+        // 加头去尾 即为前进
+        // 取代头的位置就是前进
+        this.body.unshift(new Rect(this.head.x, this.head.y, this.size, this.size, 'gray'))
+        // 去掉尾部
+        this.body.pop()
+        switch(this.direction) {
+          case 'right':
+            this.head.x += this.size
+            if (this.head.x >= canvas.width) {
+              this.head.x = 0
+            }
+            break
+          case 'left':
+            this.head.x -= this.size
+            if (this.head.x <= 0) {
+              this.head.x = canvas.width - this.size
+            }
+            break
+          case 'top':
+            this.head.y -= this.size
+            if (this.head.y <= 0) {
+              this.head.y = canvas.height - this.size
+            }
+            break
+          case 'bottom':
+            this.head.y += this.size
+            if (this.head.y >= canvas.height) {
+              this.head.y = 0
+            }
+            break
+        }
+      }
+      // 🐍动画
+      Snake.prototype.animate = function () {
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+        food.rectDraw()
+        this.snakeMove()
+        this.snakeDraw()
+        // const _this = this
+        // window.requestAnimationFrame(this.animate.bind(_this))
+        setTimeout(() => {
+          this.animate()
+        }, 100);
+      }
+      const snake = new Snake(20)
+      snake.snakeDraw()
+      let food = feeding()
+      snake.animate()
+      
+      // 投喂
+      function feeding() {
+        // 是否在🐍身上
+        let isInSnake = true
+        while (isInSnake) {
+          const x = getRand(0, (canvas.width - snake.size) / snake.size) * snake.size
+          const y = getRand(0, (canvas.height - snake.size) / snake.size) * snake.size
+          const rect = new Rect(x, y, snake.size, snake.size, 'blue')
+          // 在蛇头
+          if (isHitX(snake.head, rect) || isHitY(snake.head, rect)) {
+            let isInSnake = true
+            continue
+          }
+          // 在蛇身
+          if (snake.body.some(item => {
+            console.log(isHitX(item, rect) || isHitY(item, rect))
+            return isHitX(item, rect) || isHitY(item, rect)
+          })) {
+            let isInSnake = true
+            continue
+          }
+          console.log(x, y)
+          isInSnake = false
+          return rect
+        }
+      }
+    }
+  }
+  function isHitX(rect1, rect2) {
+    const min1 = rect1.x
+    const min2 = rect2.x
+    const max1 = rect1.x + rect1.width
+    const max2 = rect2.x + rect2.width
+    // 右边的坐标
+    const min3 = Math.max(min1, min2)
+    // 左边的坐标加宽度
+    const max3 = Math.min(max1, max2)
+    return max3 >= min3
+  }
+  function isHitY(rect1, rect2) {
+    const min1 = rect1.y
+    const min2 = rect2.y
+    const max1 = rect1.y + rect1.height
+    const max2 = rect2.y + rect2.height
+    // 右边的坐标
+    const min3 = Math.max(min1, min2)
+    // 左边的坐标加宽度
+    const max3 = Math.min(max1, max2)
+    return max3 >= min3
+  }
+  function getRand(min, max) {
+    return Math.round(Math.random() * (max - min) + min)
+  }
+  draw()
+</script>
+</html>
