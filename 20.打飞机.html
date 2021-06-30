@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    body {
+      padding: 0;
+      margin: 0;
+    }
+    #backgroundCanvas {
+      box-shadow: 0 0 10px #333;
+      margin: 0 auto;
+    }
+    #fighterCanvas, #bulletCanvas {
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="backgroundCanvas" width="320" height="568"></canvas>
+  <canvas id="fighterCanvas" width="320" height="568"></canvas>
+  <canvas id="bulletCanvas" width="320" height="568"></canvas>
+</body>
+
+<script>
+  function onloadImg(url) {
+    return new Promise((res, rej) => {
+      const img = new Image()
+      img.src = url
+      img.onload = function() {
+        res(img)
+      }
+    })
+  }
+  function draw() {
+    /** @type {HTMLCanvasElement} */ 
+    // 背景相关方法
+    function BackgroundCanvas(img) {
+      // 图片
+      this.img = img
+      this.height = 0
+      this.speed = 2
+      const canvas = document.getElementById('backgroundCanvas')
+      this.width = canvas.width
+      this.height = canvas.height
+      this.ctx = canvas.getContext('2d') 
+      // 画背景
+      this.draw = () => {
+        // 图片，sx剪切x位置，sy剪切y位置，被剪宽度，被剪高度, 图片位置x， 图片位置y， 图片宽度，图片高度
+        this.ctx.drawImage(this.img, 0, 0, 640, 1136, 0, 0, canvas.width, canvas.height)
+        this.ctx.drawImage(this.img, 0, 0, 640, 1136, 0, -canvas.height, canvas.width, canvas.height)
+      }
+      // 背景移动帧
+      this.move = () => {
+        this.ctx.save()
+        this.height += this.speed
+        if (this.height >= canvas.height) {
+          this.height = 0
+        }
+        this.ctx.translate(0, this.height)
+        this.draw()
+        this.ctx.restore()
+      }
+      // 背景动画
+      this.animate = () => {
+        this.ctx.clearRect(0, 0, canvas.width, canvas.height)
+        this.move()
+        window.requestAnimationFrame(this.animate)
+      }
+      this.init = () => {
+        this.draw()
+        this.animate()
+      }
+    }
+    
+    // 主角战机
+    function Fighter(img) {
+      this.img = img
+      this.height = 0
+      this.speed = 2
+      const canvas = document.getElementById('fighterCanvas')
+      this.width = 65
+      this.height = 81
+      this.x = (canvas.width - this.width) /2
+      this.y = canvas.height - this.height - 20
+      this.ctx = canvas.getContext('2d') 
+      // 画背景
+      this.draw = (flag) => {
+        // 图片，sx剪切x位置，sy剪切y位置，被剪宽度，被剪高度, 图片位置x， 图片位置y， 图片宽度，图片高度
+        this.ctx.drawImage(this.img, 869, 1482, 129, flag ? 162 : 128, this.x, this.y, this.width, flag ? this.height: this.height - 17)
+      }
+      this.flag = true
+      // 换气
+      this.init = () => {
+        this.timer = setInterval(() => {
+          this.ctx.clearRect(0, 0, canvas.width,  canvas.height)
+          this.flag = !this.flag
+          this.draw(this.flag)
+        }, 500)
+      }
+    }
+    function BulletCanvas(img) {
+      const canvas = document.getElementById('bulletCanvas')
+      this.ctx = canvas.getContext('2d')
+      this.bulletArr = new Array()
+      function createdBullet(x, y, ctx) {
+        this.x = x
+        this.y = y
+        this.draw = () => {
+          ctx.drawImage(img, 1008, 0, 12, 28, this.x, this.y, 6, 14)
+        }
+        this.move = () => {
+          this.y -= 20
+        }
+      }
+      this.init = (fighterCanvas) => {
+        setInterval(() => {
+          const bulltet = new createdBullet(fighterCanvas.x + fighterCanvas.width / 2 - 3, fighterCanvas.y - 14, this.ctx)
+          this.bulletArr.push(bulltet)
+        }, 100)
+        setInterval(() => {
+          this.ctx.clearRect(0, 0, canvas.width, canvas.height)
+          this.bulletArr.forEach(item => {
+            item.draw()
+            item.move()
+          })
+        }, 60)
+      }
+    }
+    // 加载完大图后处理所有
+    onloadImg('./assets/gameArts-hd.png').then(res => {
+      const backgroundCanvas = new BackgroundCanvas(res)
+      const fighterCanvas = new Fighter(res)
+      const bulletCanvas = new BulletCanvas(res)
+      backgroundCanvas.init()
+      fighterCanvas.init()
+      bulletCanvas.init(fighterCanvas)
+    })
+  }
+  draw()
+</script>
+</html>
