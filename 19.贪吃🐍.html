@@ -17,7 +17,7 @@
   </style>
 </head>
 <body>
-  <canvas id="canvas" width="800" height="600"></canvas>
+  <canvas id="canvas" width="820" height="620"></canvas>
 </body>
 
 <script>
@@ -50,6 +50,7 @@
         this.direction = 'right'
         this.head = new Rect((canvas.width- size) / 2, (canvas.height- size) / 2, this.size, this.size, 'red')
         this.body = new Array()
+        this.isEatFood = false
         var x = this.head.x - this.size
         this.body.push(new Rect(x, this.head.y, this.size, this.size, 'gray'))
         this.body.push(new Rect(x - this.size, this.head.y, this.size, this.size, 'gray'))
@@ -91,9 +92,14 @@
       Snake.prototype.snakeMove = function() {
         // 加头去尾 即为前进
         // 取代头的位置就是前进
+        // console.log(this.head.x, this.head.y)
         this.body.unshift(new Rect(this.head.x, this.head.y, this.size, this.size, 'gray'))
         // 去掉尾部
-        this.body.pop()
+        if (this.isEatFood) {
+          this.isEatFood = false
+        } else {
+         this.body.pop()
+        }
         switch(this.direction) {
           case 'right':
             this.head.x += this.size
@@ -127,17 +133,14 @@
         food.rectDraw()
         this.snakeMove()
         this.snakeDraw()
-        // const _this = this
-        // window.requestAnimationFrame(this.animate.bind(_this))
+        if (isHitRect(this.head, food)) {
+          this.isEatFood = true
+          food = feeding()
+        }
         setTimeout(() => {
           this.animate()
         }, 100);
       }
-      const snake = new Snake(20)
-      snake.snakeDraw()
-      let food = feeding()
-      snake.animate()
-      
       // 投喂
       function feeding() {
         // 是否在🐍身上
@@ -147,23 +150,25 @@
           const y = getRand(0, (canvas.height - snake.size) / snake.size) * snake.size
           const rect = new Rect(x, y, snake.size, snake.size, 'blue')
           // 在蛇头
-          if (isHitX(snake.head, rect) || isHitY(snake.head, rect)) {
+          if (isHitRect(snake.head, rect)) {
             let isInSnake = true
             continue
           }
           // 在蛇身
           if (snake.body.some(item => {
-            console.log(isHitX(item, rect) || isHitY(item, rect))
-            return isHitX(item, rect) || isHitY(item, rect)
+            return isHitRect(item, rect)
           })) {
             let isInSnake = true
             continue
           }
-          console.log(x, y)
           isInSnake = false
           return rect
         }
       }
+      const snake = new Snake(20)
+      snake.snakeDraw()
+      let food = feeding()
+      snake.animate()
     }
   }
   function isHitX(rect1, rect2) {
@@ -175,7 +180,7 @@
     const min3 = Math.max(min1, min2)
     // 左边的坐标加宽度
     const max3 = Math.min(max1, max2)
-    return max3 >= min3
+    return max3 > min3
   }
   function isHitY(rect1, rect2) {
     const min1 = rect1.y
@@ -186,7 +191,10 @@
     const min3 = Math.max(min1, min2)
     // 左边的坐标加宽度
     const max3 = Math.min(max1, max2)
-    return max3 >= min3
+    return max3 > min3
+  }
+  function isHitRect(rect1, rect2) {
+    return isHitX(rect1, rect2) && isHitY(rect1, rect2)
   }
   function getRand(min, max) {
     return Math.round(Math.random() * (max - min) + min)
