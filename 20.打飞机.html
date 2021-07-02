@@ -80,28 +80,59 @@
     
     // 主角战机
     function Fighter(img) {
+      const canvas = document.getElementById('fighterCanvas')
+      this.ctx = canvas.getContext('2d') 
       this.img = img
       this.height = 0
       this.speed = 2
-      const canvas = document.getElementById('fighterCanvas')
       this.width = 65
       this.height = 81
+      this.flag = true
       this.x = (canvas.width - this.width) /2
       this.y = canvas.height - this.height - 20
-      this.ctx = canvas.getContext('2d') 
       // 画背景
       this.draw = (flag) => {
         // 图片，sx剪切x位置，sy剪切y位置，被剪宽度，被剪高度, 图片位置x， 图片位置y， 图片宽度，图片高度
         this.ctx.drawImage(this.img, 869, 1482, 129, flag ? 162 : 128, this.x, this.y, this.width, flag ? this.height: this.height - 17)
       }
-      this.flag = true
       // 换气
       this.init = () => {
         this.timer = setInterval(() => {
           this.ctx.clearRect(0, 0, canvas.width,  canvas.height)
           this.flag = !this.flag
           this.draw(this.flag)
-        }, 500)
+        })
+        // 上下左右键盘事件
+        let timer = null
+        document.onkeydown = (e) => {
+          const { keyCode } = e
+          timer && clearInterval(timer)
+          switch (keyCode) {
+            case 37:
+            timer = setInterval(() => {
+              this.x -= 1
+            })
+            break;
+            case 38:
+            timer = setInterval(() => {
+              this.y -= 1
+            })
+            break;
+            case 39:
+            timer = setInterval(() => {
+              this.x += 1
+            })
+            break;
+            case 40:
+            timer = setInterval(() => {
+              this.y += 1
+            })
+            break;
+          }
+          document.onkeyup = () => {
+            clearInterval(timer)
+          }
+        }
       }
     }
     function BulletCanvas(img) {
@@ -111,11 +142,13 @@
       function createdBullet(x, y, ctx) {
         this.x = x
         this.y = y
+        this.width = 6
+        this.height = 14
         this.draw = () => {
-          ctx.drawImage(img, 1008, 0, 12, 28, this.x, this.y, 6, 14)
+          ctx.drawImage(img, 1008, 0, 12, 28, this.x, this.y, this.width, this.height)
         }
         this.move = () => {
-          this.y -= 20
+          this.y -= 8
         }
       }
       this.init = (fighterCanvas) => {
@@ -123,13 +156,18 @@
           const bulltet = new createdBullet(fighterCanvas.x + fighterCanvas.width / 2 - 3, fighterCanvas.y - 14, this.ctx)
           this.bulletArr.push(bulltet)
         }, 100)
-        setInterval(() => {
+        const shot = () => {
           this.ctx.clearRect(0, 0, canvas.width, canvas.height)
-          this.bulletArr.forEach(item => {
+          this.bulletArr.forEach((item,index) => {
             item.draw()
             item.move()
+            if (item.y < -item.height) {
+              this.bulletArr.splice(index, 1)
+            }
           })
-        }, 60)
+          window.requestAnimationFrame(shot)
+        }
+        shot()
       }
     }
     // 加载完大图后处理所有
