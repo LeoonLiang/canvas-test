@@ -14,7 +14,7 @@
       box-shadow: 0 0 10px #333;
       margin: 0 auto;
     }
-    #fighterCanvas, #bulletCanvas {
+    #fighterCanvas, #bulletCanvas, #enemyCanvas {
       position: absolute;
       left: 0;
       top: 0;
@@ -25,9 +25,11 @@
   <canvas id="backgroundCanvas" width="320" height="568"></canvas>
   <canvas id="fighterCanvas" width="320" height="568"></canvas>
   <canvas id="bulletCanvas" width="320" height="568"></canvas>
+  <canvas id="enemyCanvas" width="320" height="568"></canvas>
 </body>
 
 <script>
+  // 加载图片
   function onloadImg(url) {
     return new Promise((res, rej) => {
       const img = new Image()
@@ -36,6 +38,34 @@
         res(img)
       }
     })
+  }
+  // 获得随机
+  function getRom(min, max) {
+    return Math.round(Math.random() * (max - min) + min)
+  }
+  function isHitX(rect1, rect2) {
+    const min1 = rect1.x
+    const max1 = rect1.x + rect1.width
+    const min2 = rect2.x
+    const max2 = rect2.x + rect2.width
+    const min3 = Math.max(min1, min2)
+    const max3 = Math.min(max1, max2)
+
+    return min3 < max3
+  }
+  function isHitY(rect1, rect2) {
+    const min1 = rect1.y
+    const min2 = rect2.y
+    const max1 = rect1.y + rect1.height
+    const max2 = rect2.y + rect2.height
+    // 右边的坐标
+    const min3 = Math.max(min1, min2)
+    // 左边的坐标加宽度
+    const max3 = Math.min(max1, max2)
+    return max3 > min3
+  }
+  function isHitRect(rect1, rect2) {
+    return isHitX(rect1, rect2) && isHitY(rect1, rect2)
   }
   function draw() {
     /** @type {HTMLCanvasElement} */ 
@@ -77,7 +107,6 @@
         this.animate()
       }
     }
-    
     // 主角战机
     function Fighter(img) {
       const canvas = document.getElementById('fighterCanvas')
@@ -135,6 +164,7 @@
         }
       }
     }
+    // 子弹
     function BulletCanvas(img) {
       const canvas = document.getElementById('bulletCanvas')
       this.ctx = canvas.getContext('2d')
@@ -151,7 +181,7 @@
           this.y -= 8
         }
       }
-      this.init = (fighterCanvas) => {
+      this.init = (fighterCanvas, enemyCanvas) => {
         setInterval(() => {
           const bulltet = new createdBullet(fighterCanvas.x + fighterCanvas.width / 2 - 3, fighterCanvas.y - 14, this.ctx)
           this.bulletArr.push(bulltet)
@@ -166,18 +196,107 @@
             }
           })
           window.requestAnimationFrame(shot)
+          // setTimeout(shot, 60)
         }
         shot()
       }
     }
+    
+    function EnemyCanvas(img) {
+      const enemyList = {
+        big: {
+          x: 330,
+          y: 1135,
+          sWidth: 220,
+          sHeight: 328,
+          hp: 1250,
+          speed: 1
+        },
+        middle: {
+          x: 478,
+          y: 1745,
+          sWidth: 91,
+          sHeight: 117,
+          hp: 250,
+          speed: 2
+        },
+        small: {
+          x: 220,
+          y: 1605,
+          sWidth: 65,
+          sHeight: 48,
+          hp: 50,
+          speed: 3
+        }
+      }
+      const canvas = document.getElementById('enemyCanvas')
+      this.ctx = canvas.getContext('2d')
+      function CreatedEnemy(sx, sy, sWidth, sHeight, x, y, hp, speed) {
+        this.sx = sx
+        this.sy = sy
+        this.x = x
+        this.y = y
+        this.width = sWidth / 2
+        this.height = sHeight / 2
+        this.speed = speed
+        this.hp = hp
+        this.draw = (ctx) => {
+          ctx.drawImage(img, this.sx, this.sy, sWidth, sHeight, this.x, this.y, this.width, this.height)
+        }
+
+        this.move = () => {
+          this.y += this.speed
+        }
+      }
+      this.enemyArr = new Array()
+      this.init = (bulletCanvas) => {
+        setInterval(() => {
+          const ramdomNum = Math.random()
+          let type = 'small'
+          if (ramdomNum < 0.3)  {
+            type = 'big'
+          } else if (ramdomNum < 0.5) {
+            type = 'middle'
+          }
+          const { x, y, sWidth, sHeight, hp, speed } = enemyList[type]
+          this.enemyArr.push(new CreatedEnemy(x, y, sWidth, sHeight, getRom(0, canvas.width - sWidth / 2), -sHeight / 2, hp, speed))
+        }, 2000)
+        const drawEnemy = () => {
+          this.ctx.clearRect(0, 0, canvas.width, canvas.height)
+          this.enemyArr.forEach((item, index) => {
+            item.draw(this.ctx)
+            item.move()
+            if (item.y > (canvas.height + item.height) || item.hp <= 0) {
+              this.enemyArr.splice(index, 1)
+            }
+            const { bulletArr } = bulletCanvas
+            bulletArr.forEach((bullet, idx) => {
+              // console.log(idx, bullet.y)
+              if (isHitRect(bullet, item)) {
+                bulletCanvas.bulletArr.splice(idx, 1)
+                item.hp -= 50
+              }
+            })
+          })
+          window.requestAnimationFrame(drawEnemy)
+        }
+        drawEnemy()
+      }
+      
+    }
+   
     // 加载完大图后处理所有
     onloadImg('./assets/gameArts-hd.png').then(res => {
       const backgroundCanvas = new BackgroundCanvas(res)
+      res.style.transform = 'rotate(45deg)'
+      // console.dir(res.style, res.style.transform)
       const fighterCanvas = new Fighter(res)
       const bulletCanvas = new BulletCanvas(res)
+      const enemyCanvas = new EnemyCanvas(res)
       backgroundCanvas.init()
       fighterCanvas.init()
       bulletCanvas.init(fighterCanvas)
+      enemyCanvas.init(bulletCanvas)
     })
   }
   draw()
