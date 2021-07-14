@@ -16,6 +16,11 @@
   <canvas id="canvas"></canvas>
 </body>
 <script>
+  /**
+   * 水平完全弹性碰撞公式
+   * vA= (vA0(mA-mB) + 2 * mBvB) / (mA + mB)
+   * vB= (vB0(mB-mA) + 2 * mAvA) / (mA + mB)
+  */
   let colorArray = [
       '#4CBF88',
       '#F2B134',
@@ -37,9 +42,37 @@
     const distance = Math.sqrt((arc1.x - arc2.x) * (arc1.x - arc2.x) + (arc1.y - arc2.y) * (arc1.y - arc2.y))
     return distance < (arc1.r + arc2.r)
   }
+  // 旋转向量
+  function rotateVector(v, theta) {
+    return {
+        dx: v.dx * Math.cos(theta) - v.dy * Math.sin(theta),
+        dy: v.dy * Math.cos(theta) + v.dx * Math.sin(theta)
+    };
+  }
   // 处理小球碰撞后
   function resolveCollision(arc1, arc2) {
+    const theta = -Math.atan2(arc1.y- arc2.y, arc1.x - arc2.x)
+    // 旋转成水平的
+    const v1Rotated = rotateVector(arc1, theta)
+    const v2Rotated = rotateVector(arc2, theta)
 
+    // 计算新速度,根据水平完全弹性碰撞公式
+    const v1RotatedAfter = {
+      dx: (v1Rotated.dx * (arc1.mass - arc2.mass) + 2 * arc2.mass * v2Rotated.dx) / (arc1.mass + arc2.mass),
+      dy: v1Rotated.dy
+    }
+    const v2RotatedAfter = {
+      dx: (v2Rotated.dx * (arc2.mass - arc1.mass) + 2 * arc1.mass * v1Rotated.dx) / (arc1.mass + arc2.mass),
+      dy: v2Rotated.dy
+    }
+
+    // 旋转回原来的坐标系
+    const v1AfterCollision = rotateVector(v1RotatedAfter, -theta)
+    const v2AfterCollision = rotateVector(v2RotatedAfter, -theta)
+    arc1.dx = v1AfterCollision.dx
+    arc1.dy = v1AfterCollision.dy
+    arc2.dx = v2AfterCollision.dx
+    arc2.dy = v2AfterCollision.dy
   }
   function init() {
     /** @type {HTMLCanvasElement} */ 
@@ -54,12 +87,13 @@
     if (canvas.getContext) {
       const ctx = canvas.getContext('2d')
       // 小球类
-      function Ball(x, y, r, dx, dy, color) {
+      function Ball(x, y, r, dx, dy, color, mass) {
         this.x = x
         this.y = y
         this.r = r
         this.dx = dx
         this.dy = dy
+        this.mass = mass;
         this.color = color
 
         this.draw = () => {
@@ -74,7 +108,16 @@
           for (let p of particles) {
             if (this === p) continue
             if (collisionDetection(this, p)) {
-              resolveCollision(this, p);
+              // resolveCollision(this, p);
+              let xVelDiff = p.dx - this.dx;
+              let yVelDiff = p.dy - this.dy;
+              let xDist = p.x - this.x;
+              let yDist = p.y - this.y;
+
+              // 判断两个小球是否越来越近，只有越来越近才解决碰撞问题
+              if (xVelDiff * xDist + yVelDiff * yDist < 0) {
+                  resolveCollision(this, p);
+              }
             }
           }
 
@@ -93,6 +136,7 @@
       function create() {
         for(let i=0; i < 100; i++) {
           const r = getRandom(5, 10)
+          const mass = r * 0.5;
           const x = getRandom(r, canvas.width - r)
           const y = getRandom(r, canvas.height - r)
           // 避免造出来就重叠
@@ -104,10 +148,10 @@
           })) {
             continue;
           }
-          const dx = getFloatRandom(-1, 1)
-          const dy = getFloatRandom(-1, 1)
+          const dx = getFloatRandom(-3, 3)
+          const dy = getFloatRandom(-3, 3)
           const color = colorArray[getRandom(0, colorArray.length)]
-          particles.push(new Ball(x, y, r, dx, dy, color))
+          particles.push(new Ball(x, y, r, dx, dy, color, mass))
         }
       }
 
