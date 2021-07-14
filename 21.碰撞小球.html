@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    * {
+      padding: 0;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+</body>
+<script>
+  let colorArray = [
+      '#4CBF88',
+      '#F2B134',
+      '#6F4A70',
+      '#FF6275',
+      '#00B5C4'
+  ]
+  // 两数之间随机整数
+  function getRandom(min, max) {
+    return Math.round(Math.random() * (max-min)) + min
+  }
+  // 两数之间随机浮点数
+  function getFloatRandom(min, max) {
+    return Math.random() * (max-min) + min
+  }
+  // 碰撞检测
+  function collisionDetection(arc1, arc2) {
+    // 勾股定理，求距离
+    const distance = Math.sqrt((arc1.x - arc2.x) * (arc1.x - arc2.x) + (arc1.y - arc2.y) * (arc1.y - arc2.y))
+    return distance < (arc1.r + arc2.r)
+  }
+  // 处理小球碰撞后
+  function resolveCollision(arc1, arc2) {
+
+  }
+  function init() {
+    /** @type {HTMLCanvasElement} */ 
+    const particles = []
+    const canvas = document.querySelector('#canvas')
+    canvas.width = window.innerWidth
+    canvas.height = window.innerHeight
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
+    })
+    if (canvas.getContext) {
+      const ctx = canvas.getContext('2d')
+      // 小球类
+      function Ball(x, y, r, dx, dy, color) {
+        this.x = x
+        this.y = y
+        this.r = r
+        this.dx = dx
+        this.dy = dy
+        this.color = color
+
+        this.draw = () => {
+          ctx.beginPath()
+          ctx.fillStyle = this.color
+          ctx.arc(this.x, this.y, this.r, 0, Math.PI *2)
+          ctx.fill()
+        }
+
+        this.move = (particles) => {
+          // 处理该小球与其他小球碰撞好的速度
+          for (let p of particles) {
+            if (this === p) continue
+            if (collisionDetection(this, p)) {
+              resolveCollision(this, p);
+            }
+          }
+
+          if (this.x + this.dx >= (canvas.width - this.r) || this.x <= this.r) {
+            this.dx = -this.dx
+          }
+          if (this.y + this.dy >= (canvas.height - this.r) || this.y <= this.r) {
+            this.dy = -this.dy
+          }
+          this.x += this.dx
+          this.y += this.dy
+          this.draw()
+        }
+      }
+      
+      function create() {
+        for(let i=0; i < 100; i++) {
+          const r = getRandom(5, 10)
+          const x = getRandom(r, canvas.width - r)
+          const y = getRandom(r, canvas.height - r)
+          // 避免造出来就重叠
+          if (particles.some(item => {
+            if (collisionDetection(item, {x, y, r})) {
+              i--
+              return true
+            }
+          })) {
+            continue;
+          }
+          const dx = getFloatRandom(-1, 1)
+          const dy = getFloatRandom(-1, 1)
+          const color = colorArray[getRandom(0, colorArray.length)]
+          particles.push(new Ball(x, y, r, dx, dy, color))
+        }
+      }
+
+      function animate() {
+        window.requestAnimationFrame(animate)
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for(let i=0; i < particles.length; i++) {
+          particles[i].move(particles)
+        }
+      }
+      create()
+      animate()
+    }
+  }
+  init()
+</script>
+</html>
