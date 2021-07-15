@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+</body>
+<script>
+  const colorArray = [
+    '#97A7F8',
+    '#C957CA',
+    '#76E2FE',
+  ];
+  function randomColors(colors) {
+    return colors[Math.floor(Math.random() * colors.length)];
+  }
+  function randomInitRange(low, high) {
+    return Math.round(Math.random() * (high - low + 1)) + low;
+  }
+  function randomDoubleFromRange(low, high) {
+    return Math.random() * (high - low + 1) + low;
+  }
+  function setHeight(canvas) {
+    canvas.width = window.innerWidth
+    canvas.height = window.innerHeight
+    window.addEventListener('resize',() => {
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
+    } )
+  }
+  function draw() {
+    /** @type {HTMLCanvasElement} */ 
+    const canvas = document.getElementById('canvas')
+    this.setHeight(canvas)
+    let mouse = {
+      x: canvas.width / 2,
+      y: canvas.height / 2
+    }
+    window.addEventListener('mousemove', function (event) {
+      mouse.x = event.clientX;
+      mouse.y = event.clientY;
+    });
+    // 设置高度
+    if (canvas.getContext) {
+      const ctx = canvas.getContext('2d')
+      function Ball (x, y, r, color) {
+        this.x = x
+        this.y = y
+        this.r = r
+        this.color = color
+        this.speed = 0.1
+        this.theta = randomDoubleFromRange(0, 2 * Math.PI);
+        this.distance = randomInitRange(40, 70)
+        // 拖拽速度，一点一点过来
+        this.dragSpeed = 0.5;
+        this.lastMouse = {
+            x: x,
+            y: y
+        };
+        this.draw = (lastPosition) => {
+          ctx.beginPath()
+          ctx.strokeStyle = this.color
+          ctx.lineWidth = this.radius
+          ctx.moveTo(lastPosition.x, lastPosition.y)
+          ctx.lineTo(this.x, this.y)
+          ctx.stroke();
+        }
+        this.update = () => {
+          let lastPosition = {
+            x: this.x,
+            y: this.y
+          }
+          // 拖拽效果
+          this.lastMouse.x += (mouse.x - this.lastMouse.x) * this.dragSpeed;
+          this.lastMouse.y += (mouse.y - this.lastMouse.y) * this.dragSpeed;
+          this.x = this.lastMouse.x + Math.cos(this.theta) * this.distance
+          this.y = this.lastMouse.y + Math.sin(this.theta) * this.distance
+          this.theta += this.speed
+          this.draw(lastPosition)
+        }
+      }
+      function init() {
+        particles = [];
+          for (let i = 0; i < 40; i++) {
+              let color = randomColors(colorArray);
+              particles.push(new Ball(canvas.width / 2, canvas.height / 2, 3, color));
+          }
+      }
+      function animate() {
+        requestAnimationFrame(animate);
+
+        // 每一帧都给之前的帧蒙上一层白色透明的矩形
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          for (let p of particles) {
+              p.update();
+          }
+      }
+      init()
+      animate()
+    }
+  }
+  draw()
+</script>
+</html>
