@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="myCanvas"></canvas>
+</body>
+<script>
+  function randomInt(min, max) {
+    return Math.round(Math.random() * (max - min)) + min
+  }
+  function randomFloat(min, max) {
+    return Math.random() * (max - min) + min
+  }
+  function initCanvas() {
+    /** @type {HTMLCanvasElement} */ 
+    const canvas = document.getElementById('myCanvas')
+    // 设置高度
+    canvas.width = window.innerWidth
+    canvas.height = window.innerHeight
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
+    })
+
+    if (canvas.getContext) {
+      const ctx = canvas.getContext('2d')
+      const particle = []
+      class Firework {
+        constructor(x, y) {
+          this.x = x
+          this.y = y
+          this.type = 0 //0是弹头，1是烟花
+          this.firPosX = canvas.width / 2
+          this.firPosY = canvas.height
+          this.baseHue = randomInt(0, 150)
+          this.direction = 'right'  // 方向
+          this.countList = new Array(randomInt(80, 100)).fill('').map(() => {
+            const hue = randomInt(150, 201)
+            const hueVariance = 30
+            return {
+              radius: randomInt(2, 5),
+              distance: randomInt(1, 20),
+              speed: randomFloat(2, 5),
+              hue: randomInt(hue - hueVariance, hue + hueVariance) + this.baseHue,
+              brightness: randomInt(50, 81),
+              alpha: randomFloat(0.4, 1)
+            }
+          })
+
+          // 计算初始子弹射向指定位置速度
+          const baseSpeed = 24  //基本速度
+          const yDistance = this.y - this.firPosY
+          const xDistance = this.x - this.firPosX
+          const tanTheta = Math.abs(yDistance / xDistance)
+          // 弹头飞行的速度
+          this.speedX = baseSpeed / (1 + tanTheta)
+          this.speedY = -(baseSpeed - this.speedX)
+          // this.speed = randomFloat(0.5, 1)
+          if (xDistance < 0) {
+            this.direction = 'left'
+            this.speedX *= -1
+          }
+          
+        }
+        draw() {
+          if (this.type) {
+            for (let i=0; i < this.countList.length; i++) {
+              const angle = 360 / this.countList.length * i;//烟花粒子角度
+              const radians = angle * Math.PI / 180;//烟花粒子弧度
+              // console.log(this.countList[i].distance)
+              const { radius, distance, hue, brightness, alpha } = this.countList[i]
+              const vx = this.x + Math.cos(radians) * distance;
+              const vy = this.y + Math.sin(radians) * distance;
+              ctx.beginPath()
+              ctx.fillStyle = `hsla(${hue}, 100%, ${brightness}%, ${alpha} )`
+              ctx.arc(vx, vy, radius, 0, Math.PI * 2)
+              ctx.fill()
+            }
+          } else {
+            ctx.beginPath()
+            const hue = randomInt(150, 201)
+            const hueVariance = 30
+            ctx.fillStyle = `hsla(${randomInt(hue - hueVariance, hue + hueVariance) + this.baseHue}, 100%, ${randomInt(50, 81)}%, 1 )`
+            ctx.arc(this.firPosX, this.firPosY, 5, 0, Math.PI * 2)
+            ctx.fill()
+          }
+        }
+        update() {
+          if (!this.type) {
+            this.firPosX += this.speedX
+            this.firPosY += this.speedY
+            if ((this.direction === 'right' && this.firPosX > this.x && this.firPosY < this.y) || (this.direction === 'left' && this.firPosX < this.x && this.firPosY < this.y)) {
+              this.type = 1
+            }
+            // console.log(this.firPosX, (this.direction === 'right' && this.firPosX > this.x && this.firPosY < this.y) || (this.direction === 'left' && this.firPosX < this.firPosX && this.firPosY < this.y))
+          }
+          if (this.type) {
+            this.countList.forEach(item => {
+              item.alpha -= 0.01
+              item.distance += item.speed
+            })
+          }
+          // this.y += 0.98
+          // console.log(this.y)
+          this.draw()
+        }
+      }
+      function animate() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.25)'
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        particle.forEach(item => {
+          item.update()
+        })
+        requestAnimationFrame(animate)
+      }
+       // 添加鼠标事件
+      window.addEventListener('mousedown', (event) => {
+          particle.push(new Firework(event.x, event.y))
+      })
+      ctx.fillStyle = 'rgba(0, 0, 0)'
+      animate()
+    }
+  }
+  initCanvas()
+</script>
+</html>
